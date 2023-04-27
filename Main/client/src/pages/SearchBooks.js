@@ -1,37 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Col,
-  Form,
-  Button,
-  Card,
-  Row
-} from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { Container, Col, Form, Button, Card, Row } from "react-bootstrap";
 
-import { useMutation } from '@apollo/client';
-import { SAVE_BOOK } from '../utils/mutations';
-import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
+import { useMutation } from "@apollo/client";
+import { SAVE_game } from "../utils/mutations";
+import { savegameIds, getSavedgameIds } from "../utils/localStorage";
 
-import Auth from '../utils/auth';
+import Auth from "../utils/auth";
 
-const SearchBooks = () => {
+const Searchgames = () => {
   // create state for holding returned google api data
-  const [searchedBooks, setSearchedBooks] = useState([]);
+  const [searchedgames, setSearchedgames] = useState([]);
   // create state for holding our search field data
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState("");
 
-  // create state to hold saved bookId values
-  const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
+  // create state to hold saved gameId values
+  const [savedgameIds, setSavedgameIds] = useState(getSavedgameIds());
 
-  const [saveBook, { error }] = useMutation(SAVE_BOOK);
+  const [savegame, { error }] = useMutation(SAVE_game);
 
-  // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
+  // set up useEffect hook to save `savedgameIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
-    return () => saveBookIds(savedBookIds);
+    return () => savegameIds(savedgameIds);
   });
 
-  // create method to search for books and set state on form submit
+  // create method to search for games and set state on form submit
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
@@ -41,34 +34,34 @@ const SearchBooks = () => {
 
     try {
       const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${searchInput}`
+        `https://www.googleapis.com/games/v1/volumes?q=${searchInput}`
       );
 
       if (!response.ok) {
-        throw new Error('something went wrong!');
+        throw new Error("something went wrong!");
       }
 
       const { items } = await response.json();
 
-      const bookData = items.map((book) => ({
-        bookId: book.id,
-        authors: book.volumeInfo.authors || ['No author to display'],
-        title: book.volumeInfo.title,
-        description: book.volumeInfo.description,
-        image: book.volumeInfo.imageLinks?.thumbnail || '',
+      const gameData = items.map((game) => ({
+        gameId: game.id,
+        authors: game.volumeInfo.authors || ["No author to display"],
+        title: game.volumeInfo.title,
+        description: game.volumeInfo.description,
+        image: game.volumeInfo.imageLinks?.thumbnail || "",
       }));
 
-      setSearchedBooks(bookData);
-      setSearchInput('');
+      setSearchedgames(gameData);
+      setSearchInput("");
     } catch (err) {
       console.error(err);
     }
   };
 
-  // create function to handle saving a book to our database
-  const handleSaveBook = async (bookId) => {
-    // find the book in `searchedBooks` state by the matching id
-    const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
+  // create function to handle saving a game to our database
+  const handleSavegame = async (gameId) => {
+    // find the game in `searchedgames` state by the matching id
+    const gameToSave = searchedgames.find((game) => game.gameId === gameId);
 
     // get token
     const token = Auth.loggedIn() ? Auth.getToken() : null;
@@ -78,11 +71,11 @@ const SearchBooks = () => {
     }
 
     try {
-      const { data } = await saveBook({
-        variables: { bookData: { ...bookToSave } },
+      const { data } = await savegame({
+        variables: { gameData: { ...gameToSave } },
       });
-      console.log(savedBookIds);
-      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
+      console.log(savedgameIds);
+      setSavedgameIds([...savedgameIds, gameToSave.gameId]);
     } catch (err) {
       console.error(err);
     }
@@ -91,7 +84,7 @@ const SearchBooks = () => {
     <>
       <div className="text-light bg-dark p-5">
         <Container>
-          <h1>Search for Books!</h1>
+          <h1>Search for games!</h1>
           <Form onSubmit={handleFormSubmit}>
             <Row>
               <Col xs={12} md={8}>
@@ -101,7 +94,7 @@ const SearchBooks = () => {
                   onChange={(e) => setSearchInput(e.target.value)}
                   type="text"
                   size="lg"
-                  placeholder="Search for a book"
+                  placeholder="Search for a game"
                 />
               </Col>
               <Col xs={12} md={4}>
@@ -115,38 +108,40 @@ const SearchBooks = () => {
       </div>
 
       <Container>
-        <h2 className='pt-5'>
-          {searchedBooks.length
-            ? `Viewing ${searchedBooks.length} results:`
-            : 'Search for a book to begin'}
+        <h2 className="pt-5">
+          {searchedgames.length
+            ? `Viewing ${searchedgames.length} results:`
+            : "Search for a game to begin"}
         </h2>
         <Row>
-          {searchedBooks.map((book) => {
+          {searchedgames.map((game) => {
             return (
               <Col md="4">
-                <Card key={book.bookId} border="dark" className='mb-3'>
-                  {book.image ? (
+                <Card key={game.gameId} border="dark" className="mb-3">
+                  {game.image ? (
                     <Card.Img
-                      src={book.image}
-                      alt={`The cover for ${book.title}`}
+                      src={game.image}
+                      alt={`The cover for ${game.title}`}
                       variant="top"
                     />
                   ) : null}
                   <Card.Body>
-                    <Card.Title>{book.title}</Card.Title>
-                    <p className="small">Authors: {book.authors}</p>
-                    <Card.Text>{book.description}</Card.Text>
+                    <Card.Title>{game.title}</Card.Title>
+                    <p className="small">Authors: {game.authors}</p>
+                    <Card.Text>{game.description}</Card.Text>
                     {Auth.loggedIn() && (
                       <Button
-                        disabled={savedBookIds?.some(
-                          (savedId) => savedId === book.bookId
+                        disabled={savedgameIds?.some(
+                          (savedId) => savedId === game.gameId
                         )}
                         className="btn-block btn-info"
-                        onClick={() => handleSaveBook(book.bookId)}
+                        onClick={() => handleSavegame(game.gameId)}
                       >
-                        {savedBookIds?.some((savedId) => savedId === book.bookId)
-                          ? 'Book Already Saved!'
-                          : 'Save This Book!'}
+                        {savedgameIds?.some(
+                          (savedId) => savedId === game.gameId
+                        )
+                          ? "game Already Saved!"
+                          : "Save This game!"}
                       </Button>
                     )}
                   </Card.Body>
@@ -160,4 +155,4 @@ const SearchBooks = () => {
   );
 };
 
-export default SearchBooks;
+export default Searchgames;

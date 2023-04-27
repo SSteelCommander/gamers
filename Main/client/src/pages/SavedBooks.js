@@ -1,27 +1,21 @@
-import React from 'react';
-import {
-  Container,
-  Card,
-  Button,
-  Row,
-  Col
-} from 'react-bootstrap';
+import React from "react";
+import { Container, Card, Button, Row, Col } from "react-bootstrap";
 
-import { useQuery, useMutation } from '@apollo/client';
-import { QUERY_ME } from '../utils/queries';
-import { REMOVE_BOOK } from '../utils/mutations';
-import { removeBookId } from '../utils/localStorage';
+import { useQuery, useMutation } from "@apollo/client";
+import { QUERY_ME } from "../utils/queries";
+import { REMOVE_game } from "../utils/mutations";
+import { removegameId } from "../utils/localStorage";
 
-import Auth from '../utils/auth';
+import Auth from "../utils/auth";
 
-const SavedBooks = () => {
+const Savedgames = () => {
   const { loading, data } = useQuery(QUERY_ME);
-  const [removeBook, { error }] = useMutation(REMOVE_BOOK);
+  const [removegame, { error }] = useMutation(REMOVE_game);
 
   const userData = data?.me || {};
 
-  // create function that accepts the book's mongo _id value as param and deletes the book from the database
-  const handleDeleteBook = async (bookId) => {
+  // create function that accepts the game's mongo _id value as param and deletes the game from the database
+  const handleDeletegame = async (gameId) => {
     // get token
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
@@ -30,12 +24,12 @@ const SavedBooks = () => {
     }
 
     try {
-      const { data } = await removeBook({
-        variables: { bookId },
+      const { data } = await removegame({
+        variables: { gameId },
       });
 
-      // upon success, remove book's id from localStorage
-      removeBookId(bookId);
+      // upon success, remove game's id from localStorage
+      removegameId(gameId);
     } catch (err) {
       console.error(err);
     }
@@ -53,34 +47,35 @@ const SavedBooks = () => {
         </Container>
       </div>
       <Container>
-        <h2 className='pt-5'>
-          {userData.savedBooks?.length
-            ? `Viewing ${userData.savedBooks.length} saved ${userData.savedBooks.length === 1 ? 'book' : 'books'
-            }:`
-            : 'You have no saved books!'}
+        <h2 className="pt-5">
+          {userData.savedgames?.length
+            ? `Viewing ${userData.savedgames.length} saved ${
+                userData.savedgames.length === 1 ? "game" : "games"
+              }:`
+            : "You have no saved games!"}
         </h2>
         <div>
           <Row>
-            {userData.savedBooks?.map((book) => {
+            {userData.savedgames?.map((game) => {
               return (
                 <Col md="4">
-                  <Card key={book.bookId} border="dark">
-                    {book.image ? (
+                  <Card key={game.gameId} border="dark">
+                    {game.image ? (
                       <Card.Img
-                        src={book.image}
-                        alt={`The cover for ${book.title}`}
+                        src={game.image}
+                        alt={`The cover for ${game.title}`}
                         variant="top"
                       />
                     ) : null}
                     <Card.Body>
-                      <Card.Title>{book.title}</Card.Title>
-                      <p className="small">Authors: {book.authors}</p>
-                      <Card.Text>{book.description}</Card.Text>
+                      <Card.Title>{game.title}</Card.Title>
+                      <p className="small">Authors: {game.authors}</p>
+                      <Card.Text>{game.description}</Card.Text>
                       <Button
                         className="btn-block btn-danger"
-                        onClick={() => handleDeleteBook(book.bookId)}
+                        onClick={() => handleDeletegame(game.gameId)}
                       >
-                        Delete this Book!
+                        Delete this game!
                       </Button>
                     </Card.Body>
                   </Card>
@@ -94,4 +89,4 @@ const SavedBooks = () => {
   );
 };
 
-export default SavedBooks;
+export default Savedgames;
