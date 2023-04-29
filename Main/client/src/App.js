@@ -8,8 +8,8 @@ import {
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
-import Searchgames from "./pages/Searchgames";
-import Savedgames from "./pages/Savedgames";
+import Searchgames from "./pages/SearchGames";
+import Savedgames from "./pages/SavedGames";
 import Navbar from "./components/Navbar";
 
 // Construct our main GraphQL API endpoint

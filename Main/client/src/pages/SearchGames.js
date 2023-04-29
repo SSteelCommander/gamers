@@ -6,15 +6,19 @@ import { SAVE_game } from "../utils/mutations";
 import { savegameIds, getSavedgameIds } from "../utils/localStorage";
 
 import Auth from "../utils/auth";
+import Rating from "../components/Rating";
 
 const Searchgames = () => {
   // create state for holding returned google api data
   const [searchedgames, setSearchedgames] = useState([]);
+
   // create state for holding our search field data
   const [searchInput, setSearchInput] = useState("");
 
   // create state to hold saved gameId values
   const [savedgameIds, setSavedgameIds] = useState(getSavedgameIds());
+
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const [savegame, { error }] = useMutation(SAVE_game);
 
@@ -34,7 +38,7 @@ const Searchgames = () => {
 
     try {
       const response = await fetch(
-        `https://www.googleapis.com/games/v1/volumes?q=${searchInput}`
+        `https://www.googleapis.com/book/v1/volumes?q=${searchInput}`
       );
 
       if (!response.ok) {
@@ -49,6 +53,8 @@ const Searchgames = () => {
         title: game.volumeInfo.title,
         description: game.volumeInfo.description,
         image: game.volumeInfo.imageLinks?.thumbnail || "",
+        catorgies: game.id,
+        rating: game.rating,
       }));
 
       setSearchedgames(gameData);
@@ -80,6 +86,15 @@ const Searchgames = () => {
       console.error(err);
     }
   };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
+
+  const filteredGames = selectedCategory
+    ? searchedgames.filter((game) => game.category === selectedCategory)
+    : searchedgames;
+
   return (
     <>
       <div className="text-light bg-dark p-5">
@@ -107,14 +122,30 @@ const Searchgames = () => {
         </Container>
       </div>
 
+      <div>
+        <label>
+          Select category:
+          <select
+            value={selectedCategory}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="Action">Action</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Strategy">Strategy</option>
+          </select>
+        </label>
+      </div>
+
       <Container>
         <h2 className="pt-5">
+          {selectedCategory}:
           {searchedgames.length
             ? `Viewing ${searchedgames.length} results:`
             : "Search for a game to begin"}
         </h2>
         <Row>
-          {searchedgames.map((game) => {
+          {filteredGames.map((game) => {
             return (
               <Col md="4">
                 <Card key={game.gameId} border="dark" className="mb-3">
@@ -129,6 +160,7 @@ const Searchgames = () => {
                     <Card.Title>{game.title}</Card.Title>
                     <p className="small">Authors: {game.authors}</p>
                     <Card.Text>{game.description}</Card.Text>
+                    <Rating value={game.rating} />
                     {Auth.loggedIn() && (
                       <Button
                         disabled={savedgameIds?.some(
